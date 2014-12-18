@@ -1,43 +1,25 @@
-int pin_1rev = 7;
-int pin_1en = 24;
-int pin_1fwd = 6;
+#include "motor.h"
 
-int pin_2rev = 3;
-int pin_2en = 25;
-int pin_2fwd = 2;
+#define LEFTREV   7
+#define LEFTEN	 24
+#define LEFTFWD   6
+
+#define RIGHTREV  3
+#define RIGHTEN  25
+#define RIGHTFWD  2
+
+Motor m1(LEFTREV, LEFTEN, LEFTFWD);
+Motor m2(RIGHTREV, RIGHTEN, RIGHTFWD);
 
 void setup()
 {
-  Serial.begin(9600);
-  pinMode(pin_1rev, OUTPUT);
-  pinMode(pin_1en, OUTPUT);
-  pinMode(pin_1fwd, OUTPUT);
-  pinMode(pin_2rev, OUTPUT);
-  pinMode(pin_2en, OUTPUT);
-  pinMode(pin_2fwd, OUTPUT);
+  Serial1.begin(57600);
+  m1.setSpeed(100);
+  m2.setSpeed(100);
 }
 
 void loop()
 {
-  digitalWrite(pin_1fwd, LOW);
-  digitalWrite(pin_2fwd, LOW);
-  digitalWrite(pin_1rev, LOW);
-  digitalWrite(pin_2rev, LOW);
-  
-  if (Serial.available() > 0) {
-    int inByte = Serial.read();
-    
-    switch (inByte) {
-      case 'w':
-        digitalWrite(pin_1fwd, HIGH);
-        digitalWrite(pin_2fwd, HIGH);
-        break;
-      case 's':
-        digitalWrite(pin_1rev, HIGH);
-        digitalWrite(pin_2rev, HIGH);
-        break;
-    }
+  if (Serial1.available() > 0) {
   }
-  
-  delay(1000);
 }
