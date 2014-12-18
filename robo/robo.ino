@@ -14,6 +14,9 @@ Motor m2(RIGHTREV, RIGHTEN, RIGHTFWD);
 void setup()
 {
   Serial1.begin(57600);
+  m1.enable(true);
+  m2.enable(true);
+  
   m1.setSpeed(100);
   m2.setSpeed(100);
 }
