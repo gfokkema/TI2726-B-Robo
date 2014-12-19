@@ -1,3 +1,5 @@
+#include "ros.h"
+#include "geometry_msgs/Twist.h"
 #include "motor.h"
 
 #define LEFTREV   7
@@ -8,12 +10,22 @@
 #define RIGHTEN  25
 #define RIGHTFWD  2
 
+void cmd_vel_cb(const geometry_msgs::Twist& cmd_vel_msg)
+{
+  // DO SOMETHING HERE
+}
+
+ros::NodeHandle nh;
+ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", cmd_vel_cb);
+
 Motor m1(LEFTREV, LEFTEN, LEFTFWD);
 Motor m2(RIGHTREV, RIGHTEN, RIGHTFWD);
 
 void setup()
 {
-  Serial1.begin(57600);
+  nh.initNode();
+  nh.subscribe(sub);
+  
   m1.enable(true);
   m2.enable(true);
   
@@ -23,6 +35,5 @@ void setup()
 
 void loop()
 {
-  if (Serial1.available() > 0) {
-  }
+  nh.spinOnce();
 }
