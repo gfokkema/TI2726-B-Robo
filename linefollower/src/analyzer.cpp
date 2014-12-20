@@ -5,7 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 static const std::string OPENCV_WINDOW = "Image window";
- 
+
 Analyzer::Analyzer()
 : it_(nh_)
 {
@@ -38,8 +38,8 @@ Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg)
   cv::Mat gray_out1;
   cv::Mat img1;
   cv::cvtColor(cv_ptr->image, gray_out, CV_BGR2GRAY);
-  cv::GaussianBlur(gray_out, gray_out, cv::Size(3, 3), 0, 0);
-  cv::Canny(gray_out, canny_out, 50, 125, 3);
+  cv::GaussianBlur(gray_out, gray_out, cv::Size(9, 9), 0, 0);
+  cv::Canny(gray_out, canny_out, 25, 125, 3);
   cv::imshow(OPENCV_WINDOW, canny_out);
   cv::waitKey(3);
 }
