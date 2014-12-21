@@ -22,6 +22,7 @@ ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", cmd_vel_cb);
 
 void cmd_vel_cb(const geometry_msgs::Twist& cmd_vel_msg)
 {
+//  motor.setSpeed(cmd_vel_msg
   // DO SOMETHING HERE
 }
 
