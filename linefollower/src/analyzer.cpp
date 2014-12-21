@@ -4,8 +4,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-static const std::string OPENCV_WINDOW = "Image window";
-static const std::string OPENCV_UTIL = "Util window";
+static const std::string OPENCV_HOUGH = "Hough transform";
+static const std::string OPENCV_HOUGH_UTIL = "Hough utils";
+static const std::string OPENCV_CONTOUR = "Contour detection";
 
 Analyzer::Analyzer()
 : it_(nh_),
@@ -20,18 +21,21 @@ Analyzer::Analyzer()
   image_transport::TransportHints hints("compressed", ros::TransportHints());
   image_sub_ = it_.subscribe("/camera/image", 1, &Analyzer::imageCb, this, hints);
 
-  cv::namedWindow(OPENCV_WINDOW);
-  cv::namedWindow(OPENCV_UTIL);
-  cv::createTrackbar("Gaussian: ",       OPENCV_UTIL, &gaussian_min, gaussian_max);
-  cv::createTrackbar("Canny edge min: ", OPENCV_UTIL, &canny_min, canny_max);
-  cv::createTrackbar("Hough min: ",      OPENCV_UTIL, &hough_min, hough_max);
-  cv::createTrackbar("Hough line: ",     OPENCV_UTIL, &hough_line_min, hough_line_max);
-  cv::createTrackbar("Hough gap: ",      OPENCV_UTIL, &hough_gap_min, hough_gap_max);
+  cv::namedWindow(OPENCV_HOUGH);
+  cv::namedWindow(OPENCV_HOUGH_UTIL);
+  cv::namedWindow(OPENCV_CONTOUR);
+  cv::createTrackbar("Gaussian: ",       OPENCV_HOUGH_UTIL, &gaussian_min, gaussian_max);
+  cv::createTrackbar("Canny edge min: ", OPENCV_HOUGH_UTIL, &canny_min, canny_max);
+  cv::createTrackbar("Hough min: ",      OPENCV_HOUGH_UTIL, &hough_min, hough_max);
+  cv::createTrackbar("Hough line: ",     OPENCV_HOUGH_UTIL, &hough_line_min, hough_line_max);
+  cv::createTrackbar("Hough gap: ",      OPENCV_HOUGH_UTIL, &hough_gap_min, hough_gap_max);
 }
 
 Analyzer::~Analyzer()
 {
-  cv::destroyWindow(OPENCV_WINDOW);
+  cv::destroyWindow(OPENCV_HOUGH);
+  cv::destroyWindow(OPENCV_HOUGH_UTIL);
+  cv::destroyWindow(OPENCV_CONTOUR);
 }
 
 void
@@ -47,21 +51,30 @@ Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg)
 
   cv::Mat gray_out;
   cv::Mat canny_out;
-  cv::Mat cdst;
+  cv::Mat hdst;
   std::vector<cv::Vec4i> lines;
+  std::vector<std::vector<cv::Point> > contours;
+  std::vector<cv::Vec4i> hierarchy;
 
   cv::cvtColor(cv_ptr->image, gray_out, CV_BGR2GRAY);
   cv::GaussianBlur(gray_out, gray_out, cv::Size(gaussian_min, gaussian_min), 0, 0);
   cv::Canny(gray_out, canny_out, canny_min, canny_min * canny_ratio, canny_kernel);
   cv::HoughLinesP(canny_out, lines, 1, CV_PI / 180, hough_min, hough_line_min, hough_gap_min);
+  cv::findContours(canny_out, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
-  cv::cvtColor(canny_out, cdst, CV_GRAY2BGR);
+  cv::cvtColor(canny_out, hdst, CV_GRAY2BGR);
   for (size_t i = 0; i < lines.size(); i++) {
     cv::Vec4i l = lines[i];
-    cv::line(cdst, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0,0,255), 3);
+    cv::line(hdst, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0,0,255), 3);
   }
 
-  cv::imshow(OPENCV_WINDOW, cdst);
+  cv::Mat cdst = cv::Mat::zeros(canny_out.size(), CV_8UC3);
+  for (size_t i = 0; i < contours.size(); i++) {
+    cv::drawContours(cdst, contours, i, cv::Scalar(0,0,255), 2, 8, hierarchy, 0, cv::Point());
+  }
+
+  cv::imshow(OPENCV_HOUGH, hdst);
+  cv::imshow(OPENCV_CONTOUR, cdst);
   cv::waitKey(3);
 }
 
