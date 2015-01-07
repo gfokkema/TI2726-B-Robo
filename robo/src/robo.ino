@@ -3,12 +3,19 @@
 #include "motor.h"
 #include "dualmotor.h"
 
+// Left engine pins
 #define LEFTREV   7
 #define LEFTEN	 24
 #define LEFTFWD   6
+
+// Right engine pins
 #define RIGHTREV  3
 #define RIGHTEN  25
 #define RIGHTFWD  2
+
+// Proximity sensor pins
+#define ECHO     22
+#define TRIGGER  23
 
 class NewHardware : public ArduinoHardware {
 public:
@@ -46,8 +53,37 @@ void pulse_end_cb()
 	pulse_dirty = true;
 }
 
+ISR(TIMER2_COMPA_vect)
+{
+	digitalWrite(TRIGGER, HIGH);
+}
+
+ISR(TIMER2_COMPB_vect)
+{
+	digitalWrite(TRIGGER, LOW);
+}
+
 void setup()
 {
+	pinMode(ECHO,     INPUT);
+	pinMode(TRIGGER, OUTPUT);
+	
+	// WGM2   = 010 (ctc)
+	// CS2    = 110 (1024 prescaler)
+	// TIMSK2 = 011 (interrupt on ctc, interrupt on overflow)
+	// frequency: 16 MHz / 64 / 256 = 1024Hz (4 clock overflows per second)
+	// desired width: 10 ms per 250 ms --> 256 / 25 = 11
+	noInterrupts();           // disable all interrupts
+	OCR2A = 244;
+	OCR2B = 255;
+	TCCR2A = _BV(WGM21);
+	TCCR2B = _BV(CS22) | _BV(CS21);
+	TIMSK2 = _BV(OCIE2A) | _BV(OCIE2B);
+	interrupts();             // enable all interrupts
+	
+	attachInterrupt(ECHO, pulse_start_cb, RISING);
+	attachInterrupt(ECHO, pulse_end_cb,  FALLING);
+
 	nh.initNode();
 	nh.subscribe(cmd_vel_sub);
 }
