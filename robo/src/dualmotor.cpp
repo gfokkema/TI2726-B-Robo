@@ -15,10 +15,11 @@ DualMotor::update(int speed, int angular)
 	Motor* outer = p_left;
 	if (angular < 0) { inner = p_left; outer = p_right; angular = -angular; }
 
-	if (speed > 255)  speed = 255;
-	if (speed < -255) speed = -255;
+	// TODO: These checks are probably unnecessary
+	// if (speed > 255)  speed = 255;
+	// if (speed < -255) speed = -255;
 	outer->setSpeed(speed);
 
-	if (angular > speed + 255) angular = speed + 255;
+	// if (angular > speed + 255) angular = speed + 255;
 	inner->setSpeed(speed - angular);
 }
