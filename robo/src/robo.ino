@@ -56,9 +56,10 @@ void loop()
 {
 	if (pulse_dirty)
 	{
+		// Speed of sound is 340 m/s or 29 cm/microsecond
+		// The pulse travels back and forth, so we divide this by 2
 		long pulse_dt = pulse_end - pulse_start;
-		// TODO: calculate distance here
-		int pulse_distance = 20;
+		int pulse_distance = pulse_dt / 29 / 2;
 	}
 	nh.spinOnce();
 }
