@@ -17,7 +17,8 @@ void Motor::enable(bool toggle)
 
 void Motor::setSpeed(int speed)
 {
-	if (abs(speed) > 255) return;
+	if (speed > 255) speed = 255;
+	if (speed < -255) speed = -255;
 
 	if (speed > 0) {
 		digitalWrite(m_rev, LOW);

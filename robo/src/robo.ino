@@ -1,5 +1,5 @@
 #include "ros.h"
-#include "geometry_msgs/Twist.h"
+#include "geometry_msgs/Point32.h"
 #include "motor.h"
 #include "dualmotor.h"
 
@@ -20,11 +20,16 @@ Motor m2(RIGHTREV, RIGHTEN, RIGHTFWD);
 DualMotor motor(&m1, &m2);
 
 ros::NodeHandle_<NewHardware> nh;
-ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", cmd_vel_cb);
+ros::Subscriber<geometry_msgs::Point32> sub("cmd_vel", cmd_vel_cb);
 
-void cmd_vel_cb(const geometry_msgs::Twist& cmd_vel_msg)
+void cmd_vel_cb(const geometry_msgs::Point32& cmd_vel_msg)
 {
-	motor.update(cmd_vel_msg.linear.x, cmd_vel_msg.angular.z);
+	Serial.print("speed: ");
+	Serial.println(cmd_vel_msg.x);
+	Serial.print("angular: ");
+	Serial.println(cmd_vel_msg.z);
+	
+	motor.update(cmd_vel_msg.x, cmd_vel_msg.z);
 }
 
 void setup()

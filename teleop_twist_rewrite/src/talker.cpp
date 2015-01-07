@@ -1,5 +1,5 @@
 #include "ros/ros.h"
-#include "geometry_msgs/Twist.h"
+#include "geometry_msgs/Point32.h"
 #include <sstream>
 #include <stdio.h>
 #include <termios.h>
@@ -18,14 +18,14 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "talker");
 	ros::NodeHandle n;
-	ros::Publisher twist_pub_ = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
+	ros::Publisher twist_pub_ = n.advertise<geometry_msgs::Point32>("/cmd_vel", 1000);
 
 	ros::Rate loop_rate(10);
 
 	char c;
 	bool dirty = false;
-	geometry_msgs::Twist twist;
-	a_scale_ = l_scale_ = 2;
+	geometry_msgs::Point32 twist;
+	a_scale_ = l_scale_ = 10;
 
 	// get the console in raw mode
 	tcgetattr(kfd, &cooked);
@@ -56,12 +56,12 @@ int main(int argc, char** argv)
 		{
 			case KEYCODE_L:
 				ROS_DEBUG("LEFT");
-				angular_ = 1.0;
+				angular_ = -1.0;
 				dirty = true;
 				break;
 			case KEYCODE_R:
 				ROS_DEBUG("RIGHT");
-				angular_ = -1.0;
+				angular_ = 1.0;
 				dirty = true;
 				break;
 			case KEYCODE_U:
@@ -76,9 +76,9 @@ int main(int argc, char** argv)
 				break;
 		}
 
-		twist.angular.z += a_scale_ * angular_;
-		twist.linear.x += l_scale_ * linear_;
-		geometry_msgs::Twist msg = twist;
+		twist.x += l_scale_ * linear_;
+		twist.z += a_scale_ * angular_;
+		geometry_msgs::Point32 msg = twist;
 
 		if(dirty == true)
 		{
