@@ -2,6 +2,7 @@
 #define DUALMOTOR_H_
 
 class Motor;
+
 class DualMotor {
 public:
 	DualMotor(Motor* left, Motor* right);

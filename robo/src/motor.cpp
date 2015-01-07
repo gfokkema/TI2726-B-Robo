@@ -9,13 +9,15 @@ Motor::Motor(int rev, int en, int fwd)
 	pinMode(fwd, OUTPUT);
 }
 
-void Motor::enable(bool toggle)
+void
+Motor::enable(bool toggle)
 {
 	if (toggle) digitalWrite(m_en, HIGH);
 	else        digitalWrite(m_en, LOW);
 }
 
-void Motor::setSpeed(int speed)
+void
+Motor::setSpeed(int speed)
 {
 	if (speed > 255) speed = 255;
 	if (speed < -255) speed = -255;

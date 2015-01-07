@@ -13,12 +13,14 @@ ISR(TIMER1_COMPB_vect)
 	sensor.start_trigger();
 }
 
-void pulse_start_cb()
+void
+pulse_start_cb()
 {
 	sensor.start_pulse();
 }
 
-void pulse_end_cb()
+void
+pulse_end_cb()
 {
 	sensor.end_pulse();
 }
@@ -46,7 +48,8 @@ Sensor::Sensor(int trigger, int echo)
 	attachInterrupt(echo, pulse_end_cb,  FALLING);
 }
 
-void Sensor::start_trigger()
+void
+Sensor::start_trigger()
 {
 	digitalWrite(m_trigger, HIGH);
 
@@ -55,7 +58,8 @@ void Sensor::start_trigger()
 	m_timer_start_dirty = true;
 }
 
-void Sensor::end_trigger()
+void
+Sensor::end_trigger()
 {
 	// TODO: This should not be necessary!
 	// TCNT1 = 0;
@@ -67,23 +71,27 @@ void Sensor::end_trigger()
 	m_timer_end_dirty = true;
 }
 
-void Sensor::start_pulse()
+void
+Sensor::start_pulse()
 {
 	m_pulse_start = micros();
 }
 
-void Sensor::end_pulse()
+void
+Sensor::end_pulse()
 {
 	m_pulse_end = micros();
 	m_dirty = true;
 }
 
-bool Sensor::dirty()
+bool
+Sensor::dirty()
 {
 	return m_dirty;
 }
 
-int Sensor::read()
+int
+Sensor::read()
 {
 	// Speed of sound is 340 m/s or 29 cm/microsecond
 	// The pulse travels back and forth, so we divide this by 2

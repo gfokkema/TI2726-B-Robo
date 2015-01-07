@@ -9,11 +9,11 @@ DualMotor::DualMotor(Motor* left, Motor* right)
 }
 
 void
-DualMotor::update(int speed, int angular) {
+DualMotor::update(int speed, int angular)
+{
 	Motor* inner = p_right;
 	Motor* outer = p_left;
 	if (angular < 0) { inner = p_left; outer = p_right; angular = -angular; }
-
 
 	if (speed > 255)  speed = 255;
 	if (speed < -255) speed = -255;

@@ -4,8 +4,7 @@
 /**
  * This class abstracts and controls a single DC-motor.
  */
-class Motor
-{
+class Motor {
 public:
 	/**
 	 * Create a motor using the specified pins

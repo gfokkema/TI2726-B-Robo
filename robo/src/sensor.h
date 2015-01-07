@@ -4,8 +4,7 @@
 /**
  * This class abstracts and controls a proximity sensor.
  */
-class Sensor
-{
+class Sensor {
 public:
 	/**
 	 * Create a sensor using the specified pins
