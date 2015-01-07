@@ -31,6 +31,7 @@ ros::Subscriber<geometry_msgs::Point32> cmd_vel_sub("cmd_vel", cmd_vel_cb);
 
 long pulse_start = 0, pulse_end = 0;
 bool pulse_dirty = false;
+bool timer_dirty = false;
 
 void cmd_vel_cb(const geometry_msgs::Point32& cmd_vel_msg)
 {
@@ -56,6 +57,7 @@ void pulse_end_cb()
 ISR(TIMER2_COMPA_vect)
 {
 	digitalWrite(TRIGGER, HIGH);
+	timer_dirty = true;
 }
 
 ISR(TIMER2_COMPB_vect)
@@ -90,6 +92,13 @@ void setup()
 
 void loop()
 {
+	if (timer_dirty)
+	{
+		Serial.println("every 250 ms");
+		
+		timer_dirty = false;
+	}
+	
 	if (pulse_dirty)
 	{
 		Serial.println("Yay the whole chain works!");
@@ -97,6 +106,9 @@ void loop()
 		// The pulse travels back and forth, so we divide this by 2
 		long pulse_dt = pulse_end - pulse_start;
 		int pulse_distance = pulse_dt / 29 / 2;
+		
+		pulse_dirty = false;
 	}
+	
 	nh.spinOnce();
 }
