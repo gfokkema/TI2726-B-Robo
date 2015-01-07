@@ -1,6 +1,8 @@
 #include "Arduino.h"
 #include "sensor.h"
 
+extern Sensor sensor;
+
 ISR(TIMER1_COMPA_vect)
 {
 	sensor.end_trigger();

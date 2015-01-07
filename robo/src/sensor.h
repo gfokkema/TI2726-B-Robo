@@ -42,7 +42,5 @@ private:
 	bool m_dirty;
 };
 
-extern Sensor sensor;
-
 #endif /* SENSOR_H_ */
 
