@@ -74,8 +74,8 @@ void setup()
 	// frequency: 16 MHz / 64 / 256 = 1024Hz (4 clock overflows per second)
 	// desired width: 10 ms per 250 ms --> 256 / 25 = 11
 	noInterrupts();           // disable all interrupts
-	OCR2A = 244;
-	OCR2B = 255;
+	OCR2A = 255;
+	OCR2B = 11;
 	TCCR2A = _BV(WGM21);
 	TCCR2B = _BV(CS22) | _BV(CS21);
 	TIMSK2 = _BV(OCIE2A) | _BV(OCIE2B);
