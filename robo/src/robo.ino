@@ -69,7 +69,7 @@ void setup()
 	pinMode(TRIGGER, OUTPUT);
 	
 	// WGM2   = 010 (ctc)
-	// CS2    = 110 (1024 prescaler)
+	// CS2    = 100 (64 prescaler)
 	// TIMSK2 = 011 (interrupt on ctc, interrupt on overflow)
 	// frequency: 16 MHz / 64 / 256 = 1024Hz (4 clock overflows per second)
 	// desired width: 10 ms per 250 ms --> 256 / 25 = 11
@@ -77,7 +77,7 @@ void setup()
 	OCR2A = 255;
 	OCR2B = 11;
 	TCCR2A = _BV(WGM21);
-	TCCR2B = _BV(CS22) | _BV(CS21);
+	TCCR2B = _BV(CS22);
 	TIMSK2 = _BV(OCIE2A) | _BV(OCIE2B);
 	interrupts();             // enable all interrupts
 	
@@ -92,6 +92,7 @@ void loop()
 {
 	if (pulse_dirty)
 	{
+		Serial.println("Yay the whole chain works!");
 		// Speed of sound is 340 m/s or 29 cm/microsecond
 		// The pulse travels back and forth, so we divide this by 2
 		long pulse_dt = pulse_end - pulse_start;
