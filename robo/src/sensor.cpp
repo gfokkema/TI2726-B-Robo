@@ -3,26 +3,47 @@
 
 extern Sensor sensor;
 
+/*******************
+ * DEBUG VARIABLES *
+ *******************/
+long timer_start, timer_end;
+bool timer_start_dirty, timer_end_dirty;
+/*******************/
+long pulse_start, pulse_end;
+bool dirty;
+
 ISR(TIMER1_COMPA_vect)
 {
-	sensor.end_trigger();
+	// TODO: This should not be necessary!
+	// TCNT1 = 0;
+	
+	digitalWrite(sensor.m_trigger, LOW);
+
+	// DEBUG
+	timer_end = micros();
+	timer_end_dirty = true;
 }
 
 ISR(TIMER1_COMPB_vect)
 {
-	sensor.start_trigger();
+	digitalWrite(sensor.m_trigger, HIGH);
+
+	// DEBUG
+	timer_start = micros();
+	timer_start_dirty = true;
 }
 
 void
 pulse_start_cb()
 {
-	sensor.start_pulse();
+	pulse_start = micros();
 }
 
 void
 pulse_end_cb()
 {
-	sensor.end_pulse();
+	pulse_end = micros();
+	dirty = true;
 }
 
 Sensor::Sensor(int trigger, int echo)
@@ -48,46 +69,10 @@ Sensor::Sensor(int trigger, int echo)
 	attachInterrupt(echo, pulse_end_cb,  FALLING);
 }
 
-void
-Sensor::start_trigger()
-{
-	digitalWrite(m_trigger, HIGH);
-
-	// DEBUG
-	m_timer_start = micros();
-	m_timer_start_dirty = true;
-}
-
-void
-Sensor::end_trigger()
-{
-	// TODO: This should not be necessary!
-	// TCNT1 = 0;
-	
-	digitalWrite(m_trigger, LOW);
-
-	// DEBUG
-	m_timer_end = micros();
-	m_timer_end_dirty = true;
-}
-
-void
-Sensor::start_pulse()
-{
-	m_pulse_start = micros();
-}
-
-void
-Sensor::end_pulse()
-{
-	m_pulse_end = micros();
-	m_dirty = true;
-}
-
 bool
 Sensor::dirty()
 {
-	return m_dirty;
+	return dirty;
 }
 
 int
@@ -98,6 +83,6 @@ Sensor::read()
 	long pulse_dt = m_pulse_end - m_pulse_start;
 	int pulse_distance = pulse_dt / 29 / 2;
 
-	m_dirty = false;
+	dirty = false;
 	return pulse_distance;
 }
