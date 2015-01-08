@@ -21,7 +21,7 @@ public:
 	 */
 	void setSpeed(int speed);
 private:
-	int m_rev, m_en, m_fwd;
+	const int m_rev, m_en, m_fwd;
 	int m_speed;
 };
 

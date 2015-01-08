@@ -10,7 +10,7 @@ long timer_start, timer_end;
 bool timer_start_dirty, timer_end_dirty;
 /*******************/
 long pulse_start, pulse_end;
-bool dirty;
+bool bdirty = false;
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -43,11 +43,11 @@ void
 pulse_end_cb()
 {
 	pulse_end = micros();
-	dirty = true;
+	bdirty = true;
 }
 
 Sensor::Sensor(int trigger, int echo)
-: m_trigger(trigger), m_echo(echo), m_dirty(false)
+: m_trigger(trigger), m_echo(echo)
 {
 	pinMode(trigger, OUTPUT);
 	pinMode(echo,     INPUT);
@@ -72,7 +72,7 @@ Sensor::Sensor(int trigger, int echo)
 bool
 Sensor::dirty()
 {
-	return dirty;
+	return bdirty;
 }
 
 int
@@ -80,9 +80,9 @@ Sensor::read()
 {
 	// Speed of sound is 340 m/s or 29 cm/microsecond
 	// The pulse travels back and forth, so we divide this by 2
-	long pulse_dt = m_pulse_end - m_pulse_start;
+	long pulse_dt = pulse_end - pulse_start;
 	int pulse_distance = pulse_dt / 29 / 2;
 
-	dirty = false;
+	bdirty = false;
 	return pulse_distance;
 }

@@ -9,8 +9,8 @@ public:
 
 	void update(int speed, int angular);
 private:
-	Motor* p_left;
-	Motor* p_right;
+	Motor* const p_left;
+	Motor* const p_right;
 };
 
 #endif /* DUALMOTOR_H_ */

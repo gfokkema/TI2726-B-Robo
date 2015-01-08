@@ -49,20 +49,24 @@ void setup()
 	nh.subscribe(cmd_vel_sub);
 }
 
+extern bool timer_start_dirty;
+extern bool timer_end_dirty;
+extern int timer_start;
+extern int timer_end;
 void loop()
 {
-	if (sensor.m_timer_start_dirty)
+	if (timer_start_dirty)
 	{
 		Serial.print("start: ");
-		Serial.println(sensor.m_timer_start);
-		sensor.m_timer_start_dirty = false;
+		Serial.println(timer_start);
+		timer_start_dirty = false;
 	}
 	
-	if (sensor.m_timer_end_dirty)
+	if (timer_end_dirty)
 	{
 		Serial.print("end:   ");
-		Serial.println(sensor.m_timer_end);
-		sensor.m_timer_end_dirty = false;
+		Serial.println(timer_end);
+		timer_end_dirty = false;
 	}
 	
 	if (sensor.dirty())

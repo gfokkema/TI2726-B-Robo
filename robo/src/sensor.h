@@ -16,8 +16,8 @@ public:
 	 */
 	bool dirty();
 	int read();
-private:
-	int m_trigger, m_echo;
+
+	const int m_trigger, m_echo;
 };
 
 #endif /* SENSOR_H_ */
