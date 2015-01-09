@@ -6,7 +6,6 @@
 
 static const std::string OPENCV_HOUGH = "Hough transform";
 static const std::string OPENCV_HOUGH_UTIL = "Hough utils";
-static const std::string OPENCV_CONTOUR = "Contour detection";
 
 Analyzer::Analyzer()
 : it_(nh_),
@@ -19,9 +18,6 @@ Analyzer::Analyzer()
   // Subscribe to input video feed on /camera/image
   image_transport::TransportHints hints("compressed", ros::TransportHints());
   image_sub_ = it_.subscribe("/camera/image", 1, &Analyzer::imageCb, this, hints);
-
-  // Open a window for Contour detection
-  cv::namedWindow(OPENCV_CONTOUR);
 
   // Open a window for Hough detection
   cv::namedWindow(OPENCV_HOUGH);
@@ -37,7 +33,6 @@ Analyzer::~Analyzer()
 {
   cv::destroyWindow(OPENCV_HOUGH);
   cv::destroyWindow(OPENCV_HOUGH_UTIL);
-  cv::destroyWindow(OPENCV_CONTOUR);
 }
 
 void
@@ -56,30 +51,33 @@ Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg)
   cv::Mat canny_out;
   cv::Mat hdst;
   std::vector<cv::Vec4i> lines;
-  std::vector<std::vector<cv::Point> > contours;
-  std::vector<cv::Vec4i> hierarchy;
+
+  // Rotate and scale the image
+  double r[3][3] = { {0, -1, cv_ptr->image.rows - 1},
+                     {1,  0, 0},
+                     {0,  0, 1}};
+  cv::Mat transform = cv::Mat(2, 3, CV_64F, r);
+  cv::warpAffine(cv_ptr->image, gray_out, transform, cv::Size(cv_ptr->image.rows, cv_ptr->image.cols));
+  cv::resize(gray_out, gray_out, cv::Size(gray_out.cols / 2, gray_out.rows / 2));
 
   // Do some preprocessing (GRAY -> CANNY EDGE)
-  cv::cvtColor(cv_ptr->image, gray_out, CV_BGR2GRAY);
+  cv::cvtColor(gray_out, gray_out, CV_BGR2GRAY);
   cv::Canny(gray_out, canny_out, canny_min, canny_min * canny_ratio, canny_kernel);
 
   // Perform Hough line detection and draw the result
   cv::HoughLinesP(canny_out, lines, 1, CV_PI / 180, hough_min, hough_line_min, hough_gap_min);
   cv::cvtColor(canny_out, hdst, CV_GRAY2BGR);
+
+  // Values for the angle are between -M_PI / 2 and M_PI / 2 for atan2
+  // Therefore we draw all the lines with absolute angle greater than M_PI / 6
   for (size_t i = 0; i < lines.size(); i++) {
-    cv::Vec4i l = lines[i];
-    cv::line(hdst, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0,0,255), 3);
+    double angle = std::abs(atan2((double)lines[i][3] - lines[i][1],
+                                  (double)lines[i][2] - lines[i][0]));
+    if (angle > M_PI / 6) cv::line(hdst, cv::Point(lines[i][0], lines[i][1]),
+                                         cv::Point(lines[i][2], lines[i][3]),
+                                         cv::Scalar(0,0,255), 3);
   }
   cv::imshow(OPENCV_HOUGH, hdst);
-
-  // Perform contour detection and draw the result
-  cv::findContours(canny_out, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-  cv::Mat cdst = cv::Mat::zeros(canny_out.size(), CV_8UC3);
-  for (size_t i = 0; i < contours.size(); i++) {
-    cv::drawContours(cdst, contours, i, cv::Scalar(0,0,255), 2, 8, hierarchy, 0, cv::Point());
-  }
-  cv::imshow(OPENCV_CONTOUR, cdst);
-
   cv::waitKey(3);
 }
 
