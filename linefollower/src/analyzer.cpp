@@ -97,18 +97,19 @@ void Analyzer::filter(	const cv::Mat& src, const cv::vector<cv::Vec4i>& lines,
 
 void Analyzer::project(const cv::Mat& src, cv::Mat& dst) {
 	cv::Point2f srccoords[4] = {
-			cv::Point2f(1 * src.cols / 5, 0),		// left up
-			cv::Point2f(4 * src.cols / 5, 0),		// right up
+			cv::Point2f(1 * src.cols / 5, 0),	// left up
+			cv::Point2f(4 * src.cols / 5, 0),	// right up
 			cv::Point2f(src.cols, src.rows),	// right down
-			cv::Point2f(0, src.rows)				// left down
+			cv::Point2f(0, src.rows)			// left down
 	};
-	cv::Point2f dstcoords[4] = { cv::Point2f(0, 0),					// left up
-			cv::Point2f(src.cols, 0),						// right up
+	cv::Point2f dstcoords[4] = {
+			cv::Point2f(0, 0),							// left up
+			cv::Point2f(src.cols, 0),					// right up
 			cv::Point2f(4 * src.cols / 5, src.rows),	// right down
-			cv::Point2f(1 * src.cols / 5, src.rows)	// left down
+			cv::Point2f(1 * src.cols / 5, src.rows)		// left down
 	};
 	cv::Mat transform = cv::getPerspectiveTransform(srccoords, dstcoords);
-	cv::warpPerspective(src, src, transform, src.size());
+	cv::warpPerspective(src, dst, transform, src.size());
 }
 
 void Analyzer::rotate(const cv::Mat& src, cv::Mat& dst) {
