@@ -54,10 +54,11 @@ void Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg) {
 	display(hdst);
 }
 
-void display(const cv::Mat& src) {
+void Analyzer::display(const cv::Mat& src) {
 	cv::Mat dst;
 	cv::resize(src, dst, cv::Size(src.cols / 2, src.rows / 2));
-	cv::imshow(OPENCV_HOUGH, src);
+	cv::imshow(OPENCV_HOUGH, dst);
+	cv::waitKey(3);
 }
 
 void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& lines) {
@@ -66,7 +67,7 @@ void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& l
 	cv::Canny(dst, dst, canny_min, canny_min * canny_ratio, canny_kernel);
 
 	// Perform Hough line detection
-	cv::HoughLinesP(dst, lines, 1, CV_PI / 180, hough_min, hough_line_min, hough_gap_min);
+	cv::HoughLinesP(dst, lines, 1, CV_PI / 360, hough_min, hough_line_min, hough_gap_min);
 	cv::cvtColor(dst, dst, CV_GRAY2BGR);
 }
 
