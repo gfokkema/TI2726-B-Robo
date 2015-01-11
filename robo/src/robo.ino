@@ -41,6 +41,7 @@ void cmd_vel_cb(const geometry_msgs::Point32& cmd_vel_msg)
 	Serial.println(cmd_vel_msg.z);
 	
 	motor.set(cmd_vel_msg.x, cmd_vel_msg.z);
+	motor.resettimer();
 }
 
 void setup()

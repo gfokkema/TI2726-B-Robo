@@ -26,10 +26,18 @@ DualMotor::DualMotor(Motor* left, Motor* right)
 }
 
 void
+DualMotor::resettimer()
+{
+	TCNT1 = 0;
+}
+
+void
 DualMotor::set(int speed, int angular)
 {
+	noInterrupts();
 	m_speed = speed;
 	m_angular = angular;
+	interrupts();
 }
 
 void

@@ -7,6 +7,7 @@ class DualMotor {
 public:
 	DualMotor(Motor* left, Motor* right);
 
+	void resettimer();
 	void set(int speed, int angular);
 	void update();
 private:
