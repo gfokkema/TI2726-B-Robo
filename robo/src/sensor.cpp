@@ -11,9 +11,7 @@ bool timer_start_dirty;
 /*******************/
 
 ISR(TIMER5_OVF_vect) {
-	digitalWrite(sensor.m_trigger, HIGH);
-	delayMicroseconds(10);
-	digitalWrite(sensor.m_trigger, LOW);
+	sensor.trigger();
 }
 
 Sensor::Sensor(int trigger, int echo)
@@ -52,5 +50,13 @@ Sensor::read()
 	int distance = dt / 29 / 2;
 
 	return distance;
+}
+
+void
+Sensor::trigger()
+{
+	digitalWrite(m_trigger, HIGH);
+	delayMicroseconds(10);
+	digitalWrite(m_trigger, LOW);
 }
 

@@ -17,8 +17,10 @@ public:
 	 * Read the echo measurements
 	 */
 	int read();
+	void trigger();
 
-	const int m_trigger, m_echo;
+private:
+	int m_trigger, m_echo;
 };
 
 #endif /* SENSOR_H_ */

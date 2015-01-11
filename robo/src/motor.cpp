@@ -34,7 +34,5 @@ Motor::setSpeed(int speed)
 		digitalWrite(m_fwd, LOW);
 		analogWrite( m_rev, -speed);
 	}
-
-	m_speed = speed;
 }
 

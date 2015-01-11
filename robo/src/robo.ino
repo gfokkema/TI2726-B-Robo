@@ -40,7 +40,7 @@ void cmd_vel_cb(const geometry_msgs::Point32& cmd_vel_msg)
 	Serial.print("angular: ");
 	Serial.println(cmd_vel_msg.z);
 	
-	motor.update(cmd_vel_msg.x, cmd_vel_msg.z);
+	motor.set(cmd_vel_msg.x, cmd_vel_msg.z);
 }
 
 void setup()
@@ -67,5 +67,6 @@ void loop()
 		Serial.println(sensor.read());
 	}
 	
+	motor.update();
 	nh.spinOnce();
 }

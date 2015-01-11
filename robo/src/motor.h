@@ -23,7 +23,6 @@ public:
 	void setSpeed(int speed);
 private:
 	const int m_rev, m_en, m_fwd;
-	int m_speed;
 };
 
 #endif /* MOTOR_H_ */
