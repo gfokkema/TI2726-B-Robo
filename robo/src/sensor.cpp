@@ -22,8 +22,8 @@ Sensor::Sensor(int trigger, int echo)
 
 	// WGM5   = 0000 (normal)
 	// CS5    =  011 (64 prescaler)
-	// TIMSK5 = 0005 (interrupt on TOIE)
-	// overflow frequency: 16 MHz / 64 / 65536 = 1 Hz
+	// TIMSK5 = 0001 (interrupt on TOIE)
+	// overflow frequency: 16 MHz / 64 / 65536 = 4 Hz
 	noInterrupts();           // disable all interrupts
 	TCCR5A = 0;
 	TCCR5B = _BV(CS51) | _BV(CS50);

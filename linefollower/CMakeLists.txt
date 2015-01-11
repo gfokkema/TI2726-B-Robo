@@ -8,8 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
 )
-catkin_package(
-)
+catkin_package()
 
 add_executable(analyzer src/analyzer.cpp)
 target_link_libraries(analyzer ${catkin_LIBRARIES})
