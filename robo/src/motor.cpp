@@ -2,7 +2,7 @@
 #include "motor.h"
 
 Motor::Motor(int rev, int en, int fwd)
-: m_rev(rev), m_en(en), m_fwd(fwd), m_speed(0)
+: m_rev(rev), m_en(en), m_fwd(fwd)
 {
 	pinMode(rev, OUTPUT);
 	pinMode(en,  OUTPUT);

@@ -35,16 +35,20 @@ DualMotor::set(int speed, int angular)
 void
 DualMotor::update()
 {
+	noInterrupts();
+	int speed = m_speed;
+	int angular = m_angular;
+	interrupts();
+
 	Motor* inner = p_right;
 	Motor* outer = p_left;
-	int angular = m_angular;
 	if (angular < 0) { inner = p_left; outer = p_right; angular = -angular; }
 
 	// TODO: These checks are probably unnecessary
 	// if (speed > 255)  speed = 255;
 	// if (speed < -255) speed = -255;
-	outer->setSpeed(m_speed);
+	outer->setSpeed(speed);
 
 	// if (angular > speed + 255) angular = speed + 255;
-	inner->setSpeed(m_speed - m_angular);
+	inner->setSpeed(speed - angular);
 }
