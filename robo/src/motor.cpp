@@ -10,10 +10,15 @@ Motor::Motor(int rev, int en, int fwd)
 }
 
 void
-Motor::enable(bool toggle)
+Motor::enable()
 {
-	if (toggle) digitalWrite(m_en, HIGH);
-	else        digitalWrite(m_en, LOW);
+	digitalWrite(m_en, HIGH);
+}
+
+void
+Motor::disable()
+{
+	digitalWrite(m_en, LOW);
 }
 
 void

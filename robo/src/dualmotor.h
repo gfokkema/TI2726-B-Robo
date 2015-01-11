@@ -7,6 +7,8 @@ class DualMotor {
 public:
 	DualMotor(Motor* left, Motor* right);
 
+	void enable();
+	void disable();
 	void update(int speed, int angular);
 private:
 	Motor* const p_left;

@@ -50,9 +50,7 @@ void setup()
 }
 
 extern bool timer_start_dirty;
-extern bool timer_end_dirty;
 extern int timer_start;
-extern int timer_end;
 void loop()
 {
 	if (timer_start_dirty)
@@ -61,15 +59,9 @@ void loop()
 		Serial.println(timer_start);
 		timer_start_dirty = false;
 	}
-	
-	if (timer_end_dirty)
-	{
-		Serial.print("end:   ");
-		Serial.println(timer_end);
-		timer_end_dirty = false;
-	}
-	
-	if (sensor.dirty())
+		
+	int obstacle = sensor.read();
+	if (obstacle > 0)
 	{
 		Serial.print("Distance to obstacle: ");
 		Serial.println(sensor.read());

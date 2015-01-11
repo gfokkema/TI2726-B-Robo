@@ -14,7 +14,8 @@ public:
 	/**
 	 * Enable or disable this motor
 	 */
-	void enable(bool toggle);
+	void enable();
+	void disable();
 
 	/**
 	 * Set the speed of this motor
