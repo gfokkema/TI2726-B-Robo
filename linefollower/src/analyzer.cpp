@@ -63,6 +63,7 @@ void Analyzer::display(const cv::Mat& src) {
 
 void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& lines) {
 	// Do some preprocessing (GRAY -> CANNY EDGE)
+	cv::GaussianBlur(src, dst, cv::Size(3, 3), 4);
 	cv::cvtColor(src, dst, CV_BGR2GRAY);
 	cv::Canny(dst, dst, canny_min, canny_min * canny_ratio, canny_kernel);
 
