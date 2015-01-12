@@ -2,8 +2,9 @@
 #define ANALYZER_H_
 
 #include <ros/ros.h>
-#include <opencv2/opencv.hpp>
+#include <geometry_msgs/Point32.h>
 #include <image_transport/image_transport.h>
+#include <opencv2/opencv.hpp>
 #include <sensor_msgs/image_encodings.h>
 
 class Analyzer
@@ -17,9 +18,10 @@ public:
   void display(const cv::Mat& src);
   void detect (const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& lines);
   void filter (const cv::Mat& src, const cv::vector<cv::Vec4i>& lines,
-               cv::Mat& dst, cv::Point& best1, cv::Point& best2);
+               cv::Mat& dst, cv::Point& best1, cv::Point& best2, double& bestangle);
   void project(const cv::Mat& src, cv::Mat& dst);
   void rotate (const cv::Mat& src, cv::Mat& dst);
+  void sendmessage(const cv::Point& best1, const cv::Point& best2, const double& bestangle);
 private:
   int canny_ratio;
   int canny_kernel;
@@ -28,7 +30,10 @@ private:
   int hough_line_min, hough_line_max;
   int hough_gap_min, hough_gap_max;
 
+  geometry_msgs::Point32 cmd_vel_msg_avg_;
   ros::NodeHandle nh_;
+  ros::Publisher cmd_vel_pub_;
+  ros::Time cmd_vel_last_;
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
 };

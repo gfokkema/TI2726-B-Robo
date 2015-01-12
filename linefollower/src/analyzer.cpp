@@ -16,6 +16,7 @@ Analyzer::Analyzer() :
 	// Subscribe to input video feed on /camera/image
 	image_transport::TransportHints hints("compressed", ros::TransportHints());
 	image_sub_ = it_.subscribe("/camera/image", 1, &Analyzer::imageCb, this, hints);
+	cmd_vel_pub_ = nh_.advertise<geometry_msgs::Point32>("/cmd_vel", 1000);
 
 	// Open a window for Hough detection
 	cv::namedWindow(OPENCV_HOUGH);
@@ -37,6 +38,7 @@ void Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg) {
 	cv::Mat hdst;
 	cv::vector<cv::Vec4i> lines;
 	cv::Point best1, best2;
+	double bestangle;
 
 	// Read the image from msg and store it in cv_ptr
 	try {
@@ -50,7 +52,8 @@ void Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg) {
 	rotate(cv_ptr->image, hdst);
 	project(hdst, hdst);
 	detect(hdst, hdst, lines);
-	filter(hdst, lines, hdst, best1, best2);
+	filter(hdst, lines, hdst, best1, best2, bestangle);
+	sendmessage(best1, best2, bestangle);
 	display(hdst);
 }
 
@@ -73,7 +76,7 @@ void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& l
 }
 
 void Analyzer::filter(	const cv::Mat& src, const cv::vector<cv::Vec4i>& lines,
-						cv::Mat& dst, cv::Point& best1, cv::Point& best2) {
+						cv::Mat& dst, cv::Point& best1, cv::Point& best2, double& bestangle) {
 	cv::Point midbottom(dst.cols / 2, dst.rows);
 	int bestscore = INT_MIN;
 	for (size_t i = 0; i < lines.size(); i++) {
@@ -90,7 +93,7 @@ void Analyzer::filter(	const cv::Mat& src, const cv::vector<cv::Vec4i>& lines,
 			int dist = std::min(cv::norm(p1 - midbottom), cv::norm(p2 - midbottom));
 			int score = length / dist;
 
-			if (score > bestscore) { best1 = p1, best2 = p2; bestscore = score; }
+			if (score > bestscore) { best1 = p1, best2 = p2; bestangle = angle; bestscore = score; }
 		}
 	}
 	cv::line(dst, best1, best2, cv::Scalar(255, 0, 0), 3);
@@ -122,6 +125,33 @@ void Analyzer::rotate(const cv::Mat& src, cv::Mat& dst) {
 	};
 	cv::Mat transform = cv::Mat(2, 3, CV_64F, r);
 	cv::warpAffine(src, dst, transform, cv::Size(src.rows, src.cols));
+}
+
+void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const double& bestangle)
+{
+	cv::Point lowest = best1;
+	cv::Point highest = best2;
+	if (best2.y > best1.y) { lowest = best2; highest = best1; }
+	cv::Point line = lowest - highest;
+
+	double projectx = cv::norm(line) * cos(bestangle);
+	double projecty = cv::norm(line) * cos(bestangle - M_PI / 2);
+	std::cout << "--------------------------------------------" << std::endl;
+	std::cout << "line: " << line << std::endl;
+	std::cout << "projection: " << projectx << "," << projecty << std::endl;
+
+	geometry_msgs::Point32 cmd_vel_msg_new;
+	cmd_vel_msg_new.x = projecty / 3;
+	cmd_vel_msg_new.z = projectx / 3;
+
+	if ((ros::Time::now() - cmd_vel_last_).toSec() > 0.25) {
+		cmd_vel_pub_.publish(cmd_vel_msg_avg_);
+		cmd_vel_msg_avg_ = cmd_vel_msg_new;
+		cmd_vel_last_ = ros::Time::now();
+	} else {
+		cmd_vel_msg_avg_.x = (cmd_vel_msg_avg_.x + cmd_vel_msg_new.x) / 2;
+		cmd_vel_msg_avg_.z = (cmd_vel_msg_avg_.z + cmd_vel_msg_new.z) / 2;
+	}
 }
 
 int main(int argc, char** argv) {
