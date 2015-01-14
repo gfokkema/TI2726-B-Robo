@@ -8,7 +8,7 @@ ISR(TIMER5_OVF_vect) {
 }
 
 Sensor::Sensor(int trigger, int echo)
-: m_trigger(trigger), m_echo(echo)
+: m_trigger(trigger), m_echo(echo), m_distance(0)
 {
 	pinMode(trigger, OUTPUT);
 	pinMode(echo,     INPUT);
@@ -27,7 +27,7 @@ Sensor::Sensor(int trigger, int echo)
 int
 Sensor::read()
 {
-	if (!digitalRead(m_echo)) return -1;
+	if (!digitalRead(m_echo)) return m_distance;
 
 	// Measure the width of the pulse as accurately as possible
 	noInterrupts();
@@ -39,10 +39,9 @@ Sensor::read()
 
 	// Speed of sound is 340 m/s or 29 cm/microsecond
 	// The pulse travels back and forth, so we divide this by 2
-	int dt = end - start;
-	int distance = dt / 29 / 2;
+	m_distance = (end - start) / 29 / 2;
 
-	return distance;
+	return m_distance;
 }
 
 void

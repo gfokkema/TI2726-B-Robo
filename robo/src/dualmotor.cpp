@@ -9,7 +9,7 @@ ISR(TIMER1_OVF_vect) {
 }
 
 DualMotor::DualMotor(Motor* left, Motor* right)
-: p_left(left), p_right(right), m_angular(0), m_speed(0)
+: p_left(left), p_right(right), m_angular(0), m_speed(0), m_dirty(false)
 {
 	// WGM1   = 0000 (normal)
 	// CS1    =  100 (256 prescaler)
@@ -38,11 +38,15 @@ DualMotor::set(int speed, int angular)
 	m_speed = speed;
 	m_angular = angular;
 	interrupts();
+
+	m_dirty = true;
 }
 
 void
 DualMotor::update()
 {
+	if (!m_dirty) return;
+
 	noInterrupts();
 	int speed = m_speed;
 	int angular = m_angular;
@@ -55,4 +59,6 @@ DualMotor::update()
 
 	outer->setSpeed(speed);
 	inner->setSpeed(speed - angular);
+
+	m_dirty = false;
 }

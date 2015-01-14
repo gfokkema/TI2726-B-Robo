@@ -14,6 +14,7 @@ private:
 	volatile int m_angular, m_speed;
 	Motor* const p_left;
 	Motor* const p_right;
+	bool m_dirty;
 };
 
 #endif /* DUALMOTOR_H_ */
