@@ -2,10 +2,10 @@
 #include "dualmotor.h"
 #include "motor.h"
 
-extern DualMotor motor;
+extern DualMotor* motor;
 
 ISR(TIMER1_OVF_vect) {
-	motor.set(0, 0);
+	motor->set(0, 0);
 }
 
 DualMotor::DualMotor(Motor* left, Motor* right)
@@ -52,11 +52,6 @@ DualMotor::update()
 	Motor* outer = p_left;
 	if (angular < 0) { inner = p_left; outer = p_right; angular = -angular; }
 
-	// TODO: These checks are probably unnecessary
-	// if (speed > 255)  speed = 255;
-	// if (speed < -255) speed = -255;
 	outer->setSpeed(speed);
-
-	// if (angular > speed + 255) angular = speed + 255;
 	inner->setSpeed(speed - angular);
 }

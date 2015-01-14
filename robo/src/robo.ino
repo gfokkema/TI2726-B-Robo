@@ -24,50 +24,40 @@ public:
 	NewHardware() : ArduinoHardware(&Serial1, 57600) {};
 };
 
-Motor m1(LEFTREV, LEFTEN, LEFTFWD);
-Motor m2(RIGHTREV, RIGHTEN, RIGHTFWD);
-DualMotor motor(&m1, &m2);
-Sensor sensor(TRIGGER, ECHO);
+Motor* m1 = NULL;
+Motor* m2 = NULL;
+DualMotor* motor = NULL;
+Sensor* sensor = NULL;
 
 ros::NodeHandle_<NewHardware> nh;
-ros::Subscriber<geometry_msgs::Point32> cmd_vel_sub("cmd_vel", cmd_vel_cb);
+ros::Subscriber<geometry_msgs::Point32> cmd_vel_sub("/cmd_vel", cmd_vel_cb);
 
 void cmd_vel_cb(const geometry_msgs::Point32& cmd_vel_msg)
-{
-	// DEBUG
-	Serial.print("speed: ");
-	Serial.println(cmd_vel_msg.x);
-	Serial.print("angular: ");
-	Serial.println(cmd_vel_msg.z);
-	
-	motor.set(cmd_vel_msg.x, cmd_vel_msg.z);
-	motor.resettimer();
+{	
+	motor->set(cmd_vel_msg.x, cmd_vel_msg.z);
+	motor->resettimer();
 }
 
 void setup()
 {
+	m1 = new Motor(LEFTREV, LEFTEN, LEFTFWD);
+	m2 = new Motor(RIGHTREV, RIGHTEN, RIGHTFWD);
+	motor = new DualMotor(m1, m2);
+	sensor = new Sensor(TRIGGER, ECHO);
+
+	Serial.begin(9600);
 	nh.initNode();
 	nh.subscribe(cmd_vel_sub);
 }
 
-extern bool timer_start_dirty;
-extern int timer_start;
 void loop()
-{
-	if (timer_start_dirty)
+{		
+	int obstacle = sensor->read();
+	if (obstacle > 0 && obstacle < 10)
 	{
-		Serial.print("start: ");
-		Serial.println(timer_start);
-		timer_start_dirty = false;
-	}
-		
-	int obstacle = sensor.read();
-	if (obstacle > 0)
-	{
-		Serial.print("Distance to obstacle: ");
-		Serial.println(sensor.read());
+		motor->set(0, 0);
 	}
 	
-	motor.update();
+	motor->update();
 	nh.spinOnce();
 }

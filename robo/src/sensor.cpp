@@ -1,17 +1,10 @@
 #include "Arduino.h"
 #include "sensor.h"
 
-extern Sensor sensor;
-
-/*******************
- * DEBUG VARIABLES *
- *******************/
-long timer_start;
-bool timer_start_dirty;
-/*******************/
+extern Sensor* sensor;
 
 ISR(TIMER5_OVF_vect) {
-	sensor.trigger();
+	sensor->trigger();
 }
 
 Sensor::Sensor(int trigger, int echo)
