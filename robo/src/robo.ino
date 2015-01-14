@@ -45,27 +45,15 @@ void setup()
 	motor = new DualMotor(m1, m2);
 	sensor = new Sensor(TRIGGER, ECHO);
 
-	Serial.begin(9600);
 	nh.initNode();
 	nh.subscribe(cmd_vel_sub);
+	
+	Serial.begin(9600);
 }
 
 void loop()
 {
-	// Read and poll the sensor for input
-	// Interrupts don't work on the sensor pins
-	int distance = sensor->read();
-	
-	// Determine a speed multiplier based on sensor input
-	// 0    --> input < 10 cm	0%
-	// 0.25 --> input = 20 cm	25%
-	// 0.5  --> input = 30 cm	50%
-	// 0.75 --> input = 40 cm	75%
-	// 1.0  --> input > 50 cm	full speed
-	double ratio = (distance - 10) / 40.f;
-	// FIXME potential bug: does max / min support floating point values?
-	double speedcap = max(0, min(1, ratio));
-	
-	motor->update(speedcap);
 	nh.spinOnce();
+	if (sensor->dirty()) motor->setSpeedcap(sensor->read());
+	if (motor->dirty()) motor->update();
 }

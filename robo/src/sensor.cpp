@@ -24,10 +24,10 @@ Sensor::Sensor(int trigger, int echo)
 	interrupts();             // enable all interrupts
 }
 
-int
-Sensor::read()
+bool
+Sensor::dirty()
 {
-	if (!digitalRead(m_echo)) return m_distance;
+	if (!digitalRead(m_echo)) return false;
 
 	// Measure the width of the pulse as accurately as possible
 	noInterrupts();
@@ -41,6 +41,12 @@ Sensor::read()
 	// The pulse travels back and forth, so we divide this by 2
 	m_distance = (end - start) / 29 / 2;
 
+	return true;
+}
+
+int
+Sensor::read()
+{
 	return m_distance;
 }
 

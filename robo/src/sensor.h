@@ -16,6 +16,7 @@ public:
 	/**
 	 * Read the echo measurements
 	 */
+	bool dirty();
 	int read();
 	void trigger();
 
