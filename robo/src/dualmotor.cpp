@@ -48,9 +48,10 @@ DualMotor::update()
 	int angular = m_angular;
 	interrupts();
 
-	Motor* inner = p_right;
-	Motor* outer = p_left;
-	if (angular < 0) { inner = p_left; outer = p_right; angular = -angular; }
+	// Positive angular velocity means turning to the left
+	Motor* inner = p_left;
+	Motor* outer = p_right;
+	if (angular < 0) { inner = p_right; outer = p_left; angular = -angular; }
 
 	outer->setSpeed(speed);
 	inner->setSpeed(speed - angular);

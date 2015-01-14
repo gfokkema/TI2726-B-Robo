@@ -56,12 +56,12 @@ int main(int argc, char** argv)
 		{
 			case KEYCODE_L:
 				ROS_DEBUG("LEFT");
-				angular_ = -1.0;
+				angular_ = 1.0;
 				dirty = true;
 				break;
 			case KEYCODE_R:
 				ROS_DEBUG("RIGHT");
-				angular_ = 1.0;
+				angular_ = -1.0;
 				dirty = true;
 				break;
 			case KEYCODE_U:

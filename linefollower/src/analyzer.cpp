@@ -9,7 +9,7 @@ static const std::string OPENCV_HOUGH_UTIL = "Hough utils";
 
 Analyzer::Analyzer() :
 					it_(nh_), canny_kernel(3), canny_ratio(4),
-					canny_min(80), canny_max(100),
+					canny_min(40), canny_max(100),
 					hough_min(100), hough_max(200),
 					hough_line_min(200), hough_line_max(1000),
 					hough_gap_min(50), hough_gap_max(200) {
@@ -134,6 +134,7 @@ void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const
 	if (best2.y > best1.y) { lowest = best2; highest = best1; }
 	cv::Point line = lowest - highest;
 
+	// Positive angular velocity means turning to the left
 	double projectx = cv::norm(line) * cos(bestangle);
 	double projecty = cv::norm(line) * cos(bestangle - M_PI / 2);
 	std::cout << "--------------------------------------------" << std::endl;
@@ -141,8 +142,8 @@ void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const
 	std::cout << "projection: " << projectx << "," << projecty << std::endl;
 
 	geometry_msgs::Point32 cmd_vel_msg_new;
-	cmd_vel_msg_new.x = projecty / 3;
-	cmd_vel_msg_new.z = projectx / 3;
+	cmd_vel_msg_new.x = projecty / 5;
+	cmd_vel_msg_new.z = projectx / 2;
 
 	if ((ros::Time::now() - cmd_vel_last_).toSec() > 0.25) {
 		cmd_vel_pub_.publish(cmd_vel_msg_avg_);
