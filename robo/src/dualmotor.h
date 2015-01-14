@@ -9,7 +9,7 @@ public:
 
 	void resettimer();
 	void set(int speed, int angular);
-	void update();
+	void update(double speedcap);
 private:
 	volatile int m_angular, m_speed;
 	Motor* const p_left;

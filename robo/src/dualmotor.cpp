@@ -43,7 +43,7 @@ DualMotor::set(int speed, int angular)
 }
 
 void
-DualMotor::update()
+DualMotor::update(double speedcap)
 {
 	if (!m_dirty) return;
 
@@ -56,6 +56,11 @@ DualMotor::update()
 	Motor* inner = p_left;
 	Motor* outer = p_right;
 	if (angular < 0) { inner = p_right; outer = p_left; angular = -angular; }
+
+	// Clamp speed and angular to sensible ranges
+	// Only apply the speedcap when going forward (there is no sensor on the back)
+	speed =   max(-255, min(255,   speed)) * (speed > 0) * speedcap;
+	angular = max(-255, min(255, angular)) * (speed > 0) * speedcap;
 
 	outer->setSpeed(speed);
 	inner->setSpeed(speed - angular);

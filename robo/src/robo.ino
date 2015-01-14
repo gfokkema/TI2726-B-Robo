@@ -51,13 +51,21 @@ void setup()
 }
 
 void loop()
-{		
-	int obstacle = sensor->read();
-	if (obstacle > 0 && obstacle < 10)
-	{
-		motor->set(0, 0);
-	}
+{
+	// Read and poll the sensor for input
+	// Interrupts don't work on the sensor pins
+	int distance = sensor->read();
 	
-	motor->update();
+	// Determine a speed multiplier based on sensor input
+	// 0    --> input < 10 cm	0%
+	// 0.25 --> input = 20 cm	25%
+	// 0.5  --> input = 30 cm	50%
+	// 0.75 --> input = 40 cm	75%
+	// 1.0  --> input > 50 cm	full speed
+	double ratio = (distance - 10) / 40.f;
+	// FIXME potential bug: does max / min support floating point values?
+	double speedcap = max(0, min(1, ratio));
+	
+	motor->update(speedcap);
 	nh.spinOnce();
 }
