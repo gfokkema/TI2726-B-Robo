@@ -9,10 +9,12 @@ static const std::string OPENCV_HOUGH_UTIL = "Hough utils";
 
 Analyzer::Analyzer() :
 					it_(nh_), canny_kernel(3), canny_ratio(4),
-					canny_min(40), canny_max(100),
-					hough_min(100), hough_max(200),
-					hough_line_min(200), hough_line_max(1000),
-					hough_gap_min(50), hough_gap_max(200) {
+					gaussian_min(5), gaussian_max(10),		// Kernel size:	x * 2 + 1	1 ->  21
+					gaussian_dev_min(5), gaussian_dev_max(20),	// Deviation:	x / 5		0 ->   4
+					canny_min(40), canny_max(100),			// Canny thres:	x		0 -> 100
+					hough_min(100), hough_max(200),			// Hough thres:	x		0 -> 200
+					hough_line_min(200), hough_line_max(800),	// Line min:	x		0 -> 800
+					hough_gap_min(20), hough_gap_max(50) {		// Line gap:	x		0 ->  50
 	// Subscribe to input video feed on /camera/image
 	image_transport::TransportHints hints("compressed", ros::TransportHints());
 	image_sub_ = it_.subscribe("/camera/image", 1, &Analyzer::imageCb, this, hints);
@@ -22,10 +24,12 @@ Analyzer::Analyzer() :
 	cv::namedWindow(OPENCV_HOUGH);
 	// Open a window for the Hough toolbar
 	cv::namedWindow(OPENCV_HOUGH_UTIL);
-	cv::createTrackbar("Canny edge min: ", OPENCV_HOUGH_UTIL, &canny_min, canny_max);
-	cv::createTrackbar("Hough min: ", OPENCV_HOUGH_UTIL, &hough_min, hough_max);
-	cv::createTrackbar("Hough line: ", OPENCV_HOUGH_UTIL, &hough_line_min, hough_line_max);
-	cv::createTrackbar("Hough gap: ", OPENCV_HOUGH_UTIL, &hough_gap_min, hough_gap_max);
+	cv::createTrackbar("Gauss kernel (1 -   41): ", OPENCV_HOUGH_UTIL, &gaussian_min, gaussian_max);
+	cv::createTrackbar("Gauss stddev (0 -    4): ", OPENCV_HOUGH_UTIL, &gaussian_dev_min, gaussian_dev_max);
+	cv::createTrackbar("Canny edge   (0 -  100): ", OPENCV_HOUGH_UTIL, &canny_min, canny_max);
+	cv::createTrackbar("Hough min    (0 -  200): ", OPENCV_HOUGH_UTIL, &hough_min, hough_max);
+	cv::createTrackbar("Hough line   (0 - 1000): ", OPENCV_HOUGH_UTIL, &hough_line_min, hough_line_max);
+	cv::createTrackbar("Hough gap    (0 -  200): ", OPENCV_HOUGH_UTIL, &hough_gap_min, hough_gap_max);
 }
 
 Analyzer::~Analyzer() {
@@ -53,21 +57,22 @@ void Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg) {
 	project(hdst, hdst);
 	detect(hdst, hdst, lines);
 	filter(hdst, lines, hdst, best1, best2, bestangle);
+	display(hdst, OPENCV_HOUGH);
+	
 	sendmessage(best1, best2, bestangle);
-	display(hdst);
 }
 
-void Analyzer::display(const cv::Mat& src) {
+void Analyzer::display(const cv::Mat& src, const std::string& window) {
 	cv::Mat dst;
 	cv::resize(src, dst, cv::Size(src.cols / 2, src.rows / 2));
-	cv::imshow(OPENCV_HOUGH, dst);
+	cv::imshow(window, dst);
 	cv::waitKey(3);
 }
 
 void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& lines) {
 	// Do some preprocessing (GRAY -> CANNY EDGE)
-	cv::GaussianBlur(src, dst, cv::Size(3, 3), 4);
-	cv::cvtColor(src, dst, CV_BGR2GRAY);
+	cv::GaussianBlur(src, dst, cv::Size(gaussian_min * 2 + 1, gaussian_min * 2 + 1), gaussian_dev_min / 5.f);
+	cv::cvtColor(dst, dst, CV_BGR2GRAY);
 	cv::Canny(dst, dst, canny_min, canny_min * canny_ratio, canny_kernel);
 
 	// Perform Hough line detection
@@ -86,7 +91,8 @@ void Analyzer::filter(	const cv::Mat& src, const cv::vector<cv::Vec4i>& lines,
 		// -M_PI / 2 <= atan2 <= M_PI / 2, therefore we add M_PI when atan2 < 0 for a domain from 0 to M_PI
 		double angle = atan2(p2.y - p1.y, p2.x - p1.x);
 		if (angle < 0) angle += M_PI;
-		if (angle > 1 * M_PI / 6 && angle < 5 * M_PI / 6) {
+		if (withinbounds(p1) && withinbounds(p2) &&
+		    angle > 1 * M_PI / 6 && angle < 5 * M_PI / 6) {
 			cv::line(dst, p1, p2, cv::Scalar(0, 0, 255), 3);
 
 			double length = cv::norm(p1 - p2);
@@ -101,14 +107,14 @@ void Analyzer::filter(	const cv::Mat& src, const cv::vector<cv::Vec4i>& lines,
 
 void Analyzer::project(const cv::Mat& src, cv::Mat& dst) {
 	cv::Point2f srccoords[4] = {
-			cv::Point2f(1 * src.cols / 5, 0),	// left up
-			cv::Point2f(4 * src.cols / 5, 0),	// right up
+			cv::Point2f(1 * src.cols / 4, 0),	// left up
+			cv::Point2f(3 * src.cols / 4, 0),	// right up
 			cv::Point2f(src.cols, src.rows),	// right down
-			cv::Point2f(0, src.rows)			// left down
+			cv::Point2f(0, src.rows)		// left down
 	};
 	cv::Point2f dstcoords[4] = {
-			cv::Point2f(0, 0),							// left up
-			cv::Point2f(src.cols, 0),					// right up
+			cv::Point2f(0, 0),				// left up
+			cv::Point2f(src.cols, 0),			// right up
 			cv::Point2f(4 * src.cols / 5, src.rows),	// right down
 			cv::Point2f(1 * src.cols / 5, src.rows)		// left down
 	};
@@ -140,6 +146,7 @@ void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const
 	std::cout << "--------------------------------------------" << std::endl;
 	std::cout << "line: " << line << std::endl;
 	std::cout << "projection: " << projectx << "," << projecty << std::endl;
+	std::cout << "frame dt:   " << (ros::Time::now() - cmd_vel_last_).toSec() << std::endl;
 
 	geometry_msgs::Point32 cmd_vel_msg_new;
 	cmd_vel_msg_new.x = projecty / 5;
@@ -155,9 +162,16 @@ void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const
 	}
 }
 
+bool Analyzer::withinbounds(const cv::Point& point)
+{
+	return !(point.y - (point.x +  540) * 160 / 63 > -5 ||
+		 point.y + (point.x - 1620) * 160 / 63 > -5);
+}
+
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "image_converter");
 	Analyzer analyze;
+
 	ros::spin();
 	return 0;
 }
