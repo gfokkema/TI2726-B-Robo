@@ -164,8 +164,8 @@ void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const
 
 bool Analyzer::withinbounds(const cv::Point& point)
 {
-	return !(point.y - (point.x +  540) * 160 / 63 > -5 ||
-		 point.y + (point.x - 1620) * 160 / 63 > -5);
+	return !(point.y - (point.x +  540) * 160 / 63 > -10 ||
+		 point.y + (point.x - 1620) * 160 / 63 > -10);
 }
 
 int main(int argc, char** argv) {
