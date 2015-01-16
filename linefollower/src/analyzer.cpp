@@ -56,10 +56,13 @@ void Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg) {
 	rotate(cv_ptr->image, hdst);
 	project(hdst, hdst);
 	detect(hdst, hdst, lines);
-	filter(hdst, lines, hdst, best1, best2, bestangle);
+
+
+	cv::Point midbottom(hdst.cols / 2, hdst.rows);
+	filter(midbottom, lines, hdst, best1, best2, bestangle);
+	sendmessage(midbottom, best1, best2, bestangle);
+
 	display(hdst, OPENCV_HOUGH);
-	
-	sendmessage(best1, best2, bestangle);
 }
 
 void Analyzer::display(const cv::Mat& src, const std::string& window) {
@@ -80,26 +83,25 @@ void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& l
 	cv::cvtColor(dst, dst, CV_GRAY2BGR);
 }
 
-void Analyzer::filter(	const cv::Mat& src, const cv::vector<cv::Vec4i>& lines,
+void Analyzer::filter(const cv::Point& origin, const cv::vector<cv::Vec4i>& lines,
 						cv::Mat& dst, cv::Point& best1, cv::Point& best2, double& bestangle) {
-	cv::Point midbottom(dst.cols / 2, dst.rows);
-	int bestscore = INT_MIN;
+	double bestscore = DBL_MAX;
 	for (size_t i = 0; i < lines.size(); i++) {
 		cv::Point p1(lines[i][0], lines[i][1]);
 		cv::Point p2(lines[i][2], lines[i][3]);
+		if (!withinbounds(p1) || !withinbounds(p2)) continue;
 
 		// -M_PI / 2 <= atan2 <= M_PI / 2, therefore we add M_PI when atan2 < 0 for a domain from 0 to M_PI
 		double angle = atan2(p2.y - p1.y, p2.x - p1.x);
 		if (angle < 0) angle += M_PI;
-		if (withinbounds(p1) && withinbounds(p2) &&
-		    angle > 1 * M_PI / 6 && angle < 5 * M_PI / 6) {
+		if (angle > 1 * M_PI / 6 && angle < 5 * M_PI / 6) {
 			cv::line(dst, p1, p2, cv::Scalar(0, 0, 255), 3);
 
-			double length = cv::norm(p1 - p2);
-			int dist = std::min(cv::norm(p1 - midbottom), cv::norm(p2 - midbottom));
-			int score = length / dist;
+			double dist = std::min(cv::norm(p1 - origin), cv::norm(p2 - origin));
+			double dx = std::abs(p1.x - p2.x) / cv::norm(p1 - p2);
+			double score = dist * dist * dx;
 
-			if (score > bestscore) { best1 = p1, best2 = p2; bestangle = angle; bestscore = score; }
+			if (score < bestscore) { best1 = p1, best2 = p2; bestangle = angle; bestscore = score; }
 		}
 	}
 	cv::line(dst, best1, best2, cv::Scalar(255, 0, 0), 3);
@@ -133,24 +135,18 @@ void Analyzer::rotate(const cv::Mat& src, cv::Mat& dst) {
 	cv::warpAffine(src, dst, transform, cv::Size(src.rows, src.cols));
 }
 
-void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const double& bestangle)
+void Analyzer::sendmessage(const cv::Point& origin, const cv::Point& best1, const cv::Point& best2, const double& bestangle)
 {
+	if (best1.x == 0 && best1.y == 0 && best2.x == 0 && best2.y == 0) return;
+
 	cv::Point lowest = best1;
 	cv::Point highest = best2;
 	if (best2.y > best1.y) { lowest = best2; highest = best1; }
-	cv::Point line = lowest - highest;
-
-	// Positive angular velocity means turning to the left
-	double projectx = cv::norm(line) * cos(bestangle);
-	double projecty = cv::norm(line) * cos(bestangle - M_PI / 2);
-	std::cout << "--------------------------------------------" << std::endl;
-	std::cout << "line: " << line << std::endl;
-	std::cout << "projection: " << projectx << "," << projecty << std::endl;
-	std::cout << "frame dt:   " << (ros::Time::now() - cmd_vel_last_).toSec() << std::endl;
 
 	geometry_msgs::Point32 cmd_vel_msg_new;
-	cmd_vel_msg_new.x = projecty / 5;
-	cmd_vel_msg_new.z = projectx / 2;
+	cmd_vel_msg_new.x = std::min(150, (origin - highest).y / 6);					// x ==> linear speed, capped at 150
+//	cmd_vel_msg_new.z = std::max(-100, std::min(100, (origin - highest).x / 4));	// z ==> angular speed, capped at 100
+	cmd_vel_msg_new.z = (-atan2(highest.y - origin.y, highest.x - origin.x) - M_PI / 2) * 180 / M_PI ;
 
 	if ((ros::Time::now() - cmd_vel_last_).toSec() > 0.25) {
 		cmd_vel_pub_.publish(cmd_vel_msg_avg_);
@@ -164,8 +160,8 @@ void Analyzer::sendmessage(const cv::Point& best1, const cv::Point& best2, const
 
 bool Analyzer::withinbounds(const cv::Point& point)
 {
-	return !(point.y - (point.x +  540) * 160 / 63 > -10 ||
-		 point.y + (point.x - 1620) * 160 / 63 > -10);
+	return  point.y - (point.x +  540) * 160 / 63 < -10 &&
+			point.y + (point.x - 1620) * 160 / 63 < -10;
 }
 
 int main(int argc, char** argv) {
