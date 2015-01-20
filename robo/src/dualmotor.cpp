@@ -8,6 +8,7 @@ ISR(TIMER1_OVF_vect) {
 	motor->set(0, 0);
 }
 
+// Sets up the motors and a timer at 1 Hz
 DualMotor::DualMotor(Motor* left, Motor* right)
 : p_left(left), p_right(right), m_angular(0), m_speed(0), m_speedcap(1), m_dirty(false)
 {
@@ -34,6 +35,7 @@ DualMotor::dirty()
 	if (m_dirty) {
 		Serial.print("!!! dirty speedcap: "); Serial.print(m_speedcap);
 		Serial.print("!!!    dirty speed: "); Serial.print(m_speed);
+		Serial.print("!!!  dirty angular: "); Serial.print(m_angular);
 	}
 	return m_dirty;
 }
