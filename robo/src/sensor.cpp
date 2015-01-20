@@ -7,6 +7,9 @@ ISR(TIMER5_OVF_vect) {
 	sensor->trigger();
 }
 
+/**
+ * Sets up the sensor and a timer at 4 Hz
+ */
 Sensor::Sensor(int trigger, int echo)
 : m_trigger(trigger), m_echo(echo), m_distance(0)
 {
@@ -41,6 +44,12 @@ Sensor::dirty()
 	// The pulse travels back and forth, so we divide this by 2
 	m_distance = (end - start) / 29 / 2;
 
+	/****************************************
+	 * DEBUG: Should print 4 times a second *
+	 ****************************************/
+	Serial.print("--- distance: "); Serial.print(m_distance); Serial.println(" ---");
+	Serial.print("---      ms:  "); Serial.print(micros()); Serial.println(" ---");
+
 	return true;
 }
 
@@ -50,6 +59,9 @@ Sensor::read()
 	return m_distance;
 }
 
+/**
+ * Called from ISR(TIMER5_OVF_vect)
+ */
 void
 Sensor::trigger()
 {
