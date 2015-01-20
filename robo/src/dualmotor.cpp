@@ -25,16 +25,22 @@ DualMotor::DualMotor(Motor* left, Motor* right)
 	p_right->enable();
 }
 
+/**
+ * loop
+ */
 bool
 DualMotor::dirty()
 {
 	if (m_dirty) {
-		Serial.print("--- dirty speedcap: "); Serial.print(m_speedcap); Serial.println(" ---");
-		Serial.print("---    dirty speed: "); Serial.print(m_speed); Serial.println(" ---");
+		Serial.print("!!! dirty speedcap: "); Serial.print(m_speedcap);
+		Serial.print("!!!    dirty speed: "); Serial.print(m_speed);
 	}
 	return m_dirty;
 }
 
+/**
+ * callback
+ */
 void
 DualMotor::resettimer()
 {
@@ -42,7 +48,7 @@ DualMotor::resettimer()
 }
 
 /**
- * Called from ISR
+ * ISR / callback
  */
 void
 DualMotor::set(int speed, int angular)
@@ -55,6 +61,9 @@ DualMotor::set(int speed, int angular)
 	m_dirty = true;
 }
 
+/**
+ * loop
+ */
 void
 DualMotor::setSpeedcap(int distance)
 {
@@ -71,6 +80,9 @@ DualMotor::setSpeedcap(int distance)
 	m_dirty = true;
 }
 
+/**
+ * loop
+ */
 void
 DualMotor::update()
 {
@@ -89,9 +101,9 @@ DualMotor::update()
 	speed =   max(-255, min(255,   speed)) * (speed < 0 ? 1 : m_speedcap);
 	angular = max(-255, min(255, angular)) * (speed < 0 ? 1 : m_speedcap);
 
-	Serial.print("--- speedcap 2: "); Serial.print(m_speedcap); Serial.println(" ---");
-	Serial.print("---    speed 2: "); Serial.print(speed); Serial.println(" ---");
-	Serial.print("---  angular 2: "); Serial.print(speed); Serial.println(" ---");
+	Serial.print("### speedcap: "); Serial.print(m_speedcap);
+	Serial.print("###    speed: "); Serial.print(speed);
+	Serial.print("###  angular: "); Serial.print(speed);
 
 	outer->setSpeed(speed);
 	inner->setSpeed(speed - angular);

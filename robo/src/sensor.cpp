@@ -27,6 +27,9 @@ Sensor::Sensor(int trigger, int echo)
 	interrupts();             // enable all interrupts
 }
 
+/**
+ * loop
+ */
 bool
 Sensor::dirty()
 {
@@ -47,12 +50,15 @@ Sensor::dirty()
 	/****************************************
 	 * DEBUG: Should print 4 times a second *
 	 ****************************************/
-	Serial.print("--- distance: "); Serial.print(m_distance); Serial.println(" ---");
-	Serial.print("---      ms:  "); Serial.print(micros()); Serial.println(" ---");
+	Serial.print("$$$ distance: "); Serial.print(m_distance);
+	Serial.print("$$$      ms:  "); Serial.print(micros());
 
 	return true;
 }
 
+/**
+ * loop
+ */
 int
 Sensor::read()
 {
@@ -60,7 +66,7 @@ Sensor::read()
 }
 
 /**
- * Called from ISR(TIMER5_OVF_vect)
+ * ISR
  */
 void
 Sensor::trigger()
