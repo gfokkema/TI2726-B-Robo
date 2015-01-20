@@ -28,6 +28,10 @@ DualMotor::DualMotor(Motor* left, Motor* right)
 bool
 DualMotor::dirty()
 {
+	if (m_dirty) {
+		Serial.print("--- dirty speedcap: "); Serial.print(m_speedcap); Serial.println(" ---");
+		Serial.print("---    dirty speed: "); Serial.print(m_speed); Serial.println(" ---");
+	}
 	return m_dirty;
 }
 
@@ -64,8 +68,6 @@ DualMotor::setSpeedcap(int distance)
 	// FIXME potential bug: does max / min support floating point values?
 	m_speedcap = max(0, min(1, ratio));
 
-	Serial.print("--- (set) speedcap: "); Serial.print(m_speedcap); Serial.println(" ---");
-
 	m_dirty = true;
 }
 
@@ -77,10 +79,6 @@ DualMotor::update()
 	int angular = m_angular;
 	interrupts();
 
-	Serial.print("--- speedcap 1: "); Serial.print(m_speedcap); Serial.println(" ---");
-	Serial.print("---    speed 1: "); Serial.print(speed); Serial.println(" ---");
-	Serial.print("---  angular 1: "); Serial.print(speed); Serial.println(" ---");
-
 	// Positive angular velocity means turning to the left
 	Motor* inner = p_left;
 	Motor* outer = p_right;
@@ -90,10 +88,10 @@ DualMotor::update()
 	// Only apply the speedcap when going forward (there is no sensor on the back)
 	speed =   max(-255, min(255,   speed)) * (speed < 0 ? 1 : m_speedcap);
 	angular = max(-255, min(255, angular)) * (speed < 0 ? 1 : m_speedcap);
+
 	Serial.print("--- speedcap 2: "); Serial.print(m_speedcap); Serial.println(" ---");
 	Serial.print("---    speed 2: "); Serial.print(speed); Serial.println(" ---");
 	Serial.print("---  angular 2: "); Serial.print(speed); Serial.println(" ---");
-
 
 	outer->setSpeed(speed);
 	inner->setSpeed(speed - angular);
