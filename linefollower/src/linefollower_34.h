@@ -39,9 +39,21 @@ public:
   void imageCb(const sensor_msgs::ImageConstPtr& msg);
 
   /**
-   * Displays src on an OpenCV window called window.
+   * Rotate the camera by 90 degrees so we can view the camera in portrait mode.
    */
-  void display(const cv::Mat& src, const std::string& window);
+  void rotate (const cv::Mat& src, cv::Mat& dst);
+
+  /**
+   * Use perspective projection to correct for the phone's viewing angle of approx. 45 degrees.
+   * This way, lines that are parallel on the floor are parallel on the screen as well.
+   * Because of this we can use linear and angular velocity without having to correct for our viewing angle.
+   */
+  void project(const cv::Mat& src, cv::Mat& dst);
+
+  /**
+   * Check whether a point falls within the projected camera bounds (see project()).
+   */
+  bool withinbounds(const cv::Point& point);
 
   /**
    * Detect all lines in src, draw them on dst and store them in lines.
@@ -68,12 +80,27 @@ public:
   void filter (const cv::Point& origin, const cv::vector<cv::Vec4i>& lines,
                cv::Mat& dst, cv::Point& best1, cv::Point& best2, double& bestangle);
 
-
-  void project(const cv::Mat& src, cv::Mat& dst);
-  void rotate (const cv::Mat& src, cv::Mat& dst);
+  /**
+   * Generate and publish a ROS message with linear and angular velocity based on the best line.
+   * The linear and angular speeds are generated as follows:
+   * - of the best line the highest point is selected
+   *   - the distance from this point to the origin is used to generate linear speed
+   *   - the angle of the line from this point to the origin is used to generate angular speed
+   *     this way the robot always steers towards the end point of the best line
+   * - at most 4 messages are sent every second
+   *   this is done by averaging linear and angular velocity until 0.25 second has passed
+   */
   void sendmessage(const cv::Point& origin, const cv::Point& best1, const cv::Point& best2, const double& bestangle);
-  bool withinbounds(const cv::Point& point);
+
+  /**
+   * Displays src on an OpenCV window called window.
+   * Primarily used for debugging.
+   */
+  void display(const cv::Mat& src, const std::string& window);
+
 private:
+  // These variables are used to construct the sliders.
+  // The sliders can then be used to dynamically adjust thresholds for line detection.
   int canny_ratio;
   int canny_kernel;
   int canny_min, canny_max;
