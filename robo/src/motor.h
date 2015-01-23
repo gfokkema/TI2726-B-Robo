@@ -18,7 +18,8 @@ public:
 	void disable();
 
 	/**
-	 * Set the speed of this motor
+	 * Set the speed of this motor.
+	 * Speed goes from -255 (backwards) to 255 (forwards).
 	 */
 	void setSpeed(int speed);
 private:

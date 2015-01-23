@@ -3,13 +3,14 @@
 
 extern Sensor* sensor;
 
+/**
+ * This ISR overflows at a frequency of 4Hz and triggers the sensor for 10 us when it does.
+ * This way we're provided with a steady stream of ECHO signals in order to measure distance to objects.
+ */
 ISR(TIMER5_OVF_vect) {
 	sensor->trigger();
 }
 
-/**
- * Sets up the sensor and a timer at 4 Hz
- */
 Sensor::Sensor(int trigger, int echo)
 : m_trigger(trigger), m_echo(echo), m_distance(0)
 {
@@ -27,12 +28,10 @@ Sensor::Sensor(int trigger, int echo)
 	interrupts();             // enable all interrupts
 }
 
-/**
- * loop
- */
 bool
 Sensor::dirty()
 {
+	// Wait for MAX_PULSE microseconds until ECHO is high
 	long start = micros();
 	while (!digitalRead(m_echo) && micros() - start < MAX_PULSE)
 		delayMicroseconds(1);
@@ -48,23 +47,17 @@ Sensor::dirty()
 
 	// Speed of sound is 340 m/s or 29 cm/microsecond
 	// The pulse travels back and forth, so we divide this by 2
-	m_distance = (end - start) / 29;
+	m_distance = (end - start) / 29 / 2;
 
 	return true;
 }
 
-/**
- * loop
- */
 int
 Sensor::read()
 {
 	return m_distance;
 }
 
-/**
- * ISR
- */
 void
 Sensor::trigger()
 {
@@ -72,4 +65,3 @@ Sensor::trigger()
 	delayMicroseconds(10);
 	digitalWrite(m_trigger, LOW);
 }
-

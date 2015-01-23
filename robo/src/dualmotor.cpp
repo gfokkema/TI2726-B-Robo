@@ -4,11 +4,14 @@
 
 extern DualMotor* motor;
 
+/**
+ * This ISR overflows at a frequency of 1Hz and stops the robot when it does.
+ * In order to prevent this, ROS messages should be sent at a frequency > 1 Hz.
+ */
 ISR(TIMER1_OVF_vect) {
 	motor->set(0, 0);
 }
 
-// Sets up the motors and a timer at 1 Hz
 DualMotor::DualMotor(Motor* left, Motor* right)
 : p_left(left), p_right(right), m_angular(0), m_speed(0), m_speedcap(1), m_dirty(false)
 {
@@ -26,30 +29,22 @@ DualMotor::DualMotor(Motor* left, Motor* right)
 	p_right->enable();
 }
 
-/**
- * loop
- */
 bool
 DualMotor::dirty()
 {
 	return m_dirty;
 }
 
-/**
- * callback
- */
 void
 DualMotor::resettimer()
 {
 	TCNT1 = 0;
 }
 
-/**
- * ISR / callback
- */
 void
 DualMotor::set(int speed, int angular)
 {
+	// This operation should be atomic
 	noInterrupts();
 	m_speed = speed;
 	m_angular = angular;
@@ -58,9 +53,6 @@ DualMotor::set(int speed, int angular)
 	m_dirty = true;
 }
 
-/**
- * loop
- */
 void
 DualMotor::setSpeedcap(int distance)
 {
@@ -70,19 +62,17 @@ DualMotor::setSpeedcap(int distance)
 	// 0.5  --> input = 30 cm	50%
 	// 0.75 --> input = 40 cm	75%
 	// 1.0  --> input > 50 cm	full speed
-	double ratio = (distance - 10) / 20.f;
-	// FIXME potential bug: does max / min support floating point values?
-	m_speedcap = max(0, min(1, ratio));
+	double ratio = (distance - 10) / 40.f;
 
+	// Clamp the speedcap to a value between 0 and 1.
+	m_speedcap = max(0, min(1, ratio));
 	m_dirty = true;
 }
 
-/**
- * loop
- */
 void
 DualMotor::update()
 {
+	// This operation should be atomic
 	noInterrupts();
 	int speed = m_speed;
 	int angular = m_angular;
@@ -94,12 +84,13 @@ DualMotor::update()
 	if (angular < 0) { inner = p_right; outer = p_left; angular = -angular; }
 
 	// Clamp speed and angular to sensible ranges
-	// Only apply the speedcap when going forward (there is no sensor on the back)
+	// Only apply the speedcap when going forward (because there is no sensor on the back)
 	speed =   max(-255, min(255,   speed)) * (speed < 0 ? 1 : m_speedcap);
 	angular =           min(511, angular)  * (speed < 0 ? 1 : m_speedcap);
 
 	outer->setSpeed(speed);
 	inner->setSpeed(speed - angular);
 
+	// Reset the state of the dualmotor when input is processed
 	m_dirty = false;
 }
