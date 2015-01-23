@@ -33,11 +33,14 @@ Sensor::Sensor(int trigger, int echo)
 bool
 Sensor::dirty()
 {
+	long start = micros();
+	while (!digitalRead(m_echo) && micros() - start < MAX_PULSE)
+		delayMicroseconds(1);
 	if (!digitalRead(m_echo)) return false;
 
 	// Measure the width of the pulse as accurately as possible
 	noInterrupts();
-	long start = micros();
+	start = micros();
 	while (digitalRead(m_echo) && micros() - start < MAX_PULSE)
 		delayMicroseconds(1);
 	long end = micros();
@@ -45,13 +48,7 @@ Sensor::dirty()
 
 	// Speed of sound is 340 m/s or 29 cm/microsecond
 	// The pulse travels back and forth, so we divide this by 2
-	m_distance = (end - start) / 29 / 2;
-
-	/****************************************
-	 * DEBUG: Should print 4 times a second *
-	 ****************************************/
-	Serial.print("$$$ distance: "); Serial.print(m_distance);
-	Serial.print("$$$      ms:  "); Serial.print(micros());
+	m_distance = (end - start) / 29;
 
 	return true;
 }

@@ -32,11 +32,6 @@ DualMotor::DualMotor(Motor* left, Motor* right)
 bool
 DualMotor::dirty()
 {
-	if (m_dirty) {
-		Serial.print("!!! dirty speedcap: "); Serial.print(m_speedcap);
-		Serial.print("!!!    dirty speed: "); Serial.print(m_speed);
-		Serial.print("!!!  dirty angular: "); Serial.print(m_angular);
-	}
 	return m_dirty;
 }
 
@@ -75,7 +70,7 @@ DualMotor::setSpeedcap(int distance)
 	// 0.5  --> input = 30 cm	50%
 	// 0.75 --> input = 40 cm	75%
 	// 1.0  --> input > 50 cm	full speed
-	double ratio = (distance - 10) / 40.f;
+	double ratio = (distance - 10) / 20.f;
 	// FIXME potential bug: does max / min support floating point values?
 	m_speedcap = max(0, min(1, ratio));
 
@@ -101,11 +96,7 @@ DualMotor::update()
 	// Clamp speed and angular to sensible ranges
 	// Only apply the speedcap when going forward (there is no sensor on the back)
 	speed =   max(-255, min(255,   speed)) * (speed < 0 ? 1 : m_speedcap);
-	angular = max(-255, min(255, angular)) * (speed < 0 ? 1 : m_speedcap);
-
-	Serial.print("### speedcap: "); Serial.print(m_speedcap);
-	Serial.print("###    speed: "); Serial.print(speed);
-	Serial.print("###  angular: "); Serial.print(speed);
+	angular =           min(511, angular)  * (speed < 0 ? 1 : m_speedcap);
 
 	outer->setSpeed(speed);
 	inner->setSpeed(speed - angular);
