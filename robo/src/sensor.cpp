@@ -7,6 +7,9 @@ ISR(TIMER5_OVF_vect) {
 	sensor->trigger();
 }
 
+/**
+ * Sets up the sensor and a timer at 4 Hz
+ */
 Sensor::Sensor(int trigger, int echo)
 : m_trigger(trigger), m_echo(echo), m_distance(0)
 {
@@ -24,14 +27,20 @@ Sensor::Sensor(int trigger, int echo)
 	interrupts();             // enable all interrupts
 }
 
+/**
+ * loop
+ */
 bool
 Sensor::dirty()
 {
+	long start = micros();
+	while (!digitalRead(m_echo) && micros() - start < MAX_PULSE)
+		delayMicroseconds(1);
 	if (!digitalRead(m_echo)) return false;
 
 	// Measure the width of the pulse as accurately as possible
 	noInterrupts();
-	long start = micros();
+	start = micros();
 	while (digitalRead(m_echo) && micros() - start < MAX_PULSE)
 		delayMicroseconds(1);
 	long end = micros();
@@ -39,17 +48,23 @@ Sensor::dirty()
 
 	// Speed of sound is 340 m/s or 29 cm/microsecond
 	// The pulse travels back and forth, so we divide this by 2
-	m_distance = (end - start) / 29 / 2;
+	m_distance = (end - start) / 29;
 
 	return true;
 }
 
+/**
+ * loop
+ */
 int
 Sensor::read()
 {
 	return m_distance;
 }
 
+/**
+ * ISR
+ */
 void
 Sensor::trigger()
 {

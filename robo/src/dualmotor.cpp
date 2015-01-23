@@ -8,6 +8,7 @@ ISR(TIMER1_OVF_vect) {
 	motor->set(0, 0);
 }
 
+// Sets up the motors and a timer at 1 Hz
 DualMotor::DualMotor(Motor* left, Motor* right)
 : p_left(left), p_right(right), m_angular(0), m_speed(0), m_speedcap(1), m_dirty(false)
 {
@@ -25,18 +26,27 @@ DualMotor::DualMotor(Motor* left, Motor* right)
 	p_right->enable();
 }
 
+/**
+ * loop
+ */
 bool
 DualMotor::dirty()
 {
 	return m_dirty;
 }
 
+/**
+ * callback
+ */
 void
 DualMotor::resettimer()
 {
 	TCNT1 = 0;
 }
 
+/**
+ * ISR / callback
+ */
 void
 DualMotor::set(int speed, int angular)
 {
@@ -48,6 +58,9 @@ DualMotor::set(int speed, int angular)
 	m_dirty = true;
 }
 
+/**
+ * loop
+ */
 void
 DualMotor::setSpeedcap(int distance)
 {
@@ -57,13 +70,16 @@ DualMotor::setSpeedcap(int distance)
 	// 0.5  --> input = 30 cm	50%
 	// 0.75 --> input = 40 cm	75%
 	// 1.0  --> input > 50 cm	full speed
-	double ratio = (distance - 10) / 40.f;
+	double ratio = (distance - 10) / 20.f;
 	// FIXME potential bug: does max / min support floating point values?
 	m_speedcap = max(0, min(1, ratio));
 
 	m_dirty = true;
 }
 
+/**
+ * loop
+ */
 void
 DualMotor::update()
 {

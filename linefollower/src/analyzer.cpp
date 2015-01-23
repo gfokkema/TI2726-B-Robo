@@ -8,13 +8,13 @@ static const std::string OPENCV_HOUGH = "Hough transform";
 static const std::string OPENCV_HOUGH_UTIL = "Hough utils";
 
 Analyzer::Analyzer() :
-			it_(nh_), canny_kernel(3), canny_ratio(4),
-			gaussian_min(5), gaussian_max(10),		// Kernel size:	x * 2 + 1	1 ->  21
-			gaussian_dev_min(15), gaussian_dev_max(20),	// Deviation:	x / 5		0 ->   4
-			canny_min(40), canny_max(100),			// Canny thres:	x		0 -> 100
-			hough_min(40), hough_max(200),			// Hough thres:	x		0 -> 200
-			hough_line_min(80), hough_line_max(800),	// Line min:	x		0 -> 800
-			hough_gap_min(20), hough_gap_max(50) {		// Line gap:	x		0 ->  50
+		it_(nh_), canny_kernel(3), canny_ratio(4),
+		gaussian_min(5), gaussian_max(10),		// Kernel size:	x * 2 + 1	1 ->  21
+		gaussian_dev_min(15), gaussian_dev_max(20),	// Deviation:	x / 5		0 ->   4
+		canny_min(40), canny_max(100),			// Canny thres:	x		0 -> 100
+		hough_min(40), hough_max(200),			// Hough thres:	x		0 -> 200
+		hough_line_min(80), hough_line_max(800),	// Line min:	x		0 -> 800
+		hough_gap_min(20), hough_gap_max(50) {		// Line gap:	x		0 ->  50
 	// Subscribe to input video feed on /camera/image
 	image_transport::TransportHints hints("compressed", ros::TransportHints());
 	image_sub_ = it_.subscribe("/camera/image", 1, &Analyzer::imageCb, this, hints);
@@ -57,7 +57,6 @@ void Analyzer::imageCb(const sensor_msgs::ImageConstPtr& msg) {
 	project(hdst, hdst);
 	detect(hdst, hdst, lines);
 
-
 	cv::Point midbottom(hdst.cols / 2, hdst.rows - 100);
 	filter(midbottom, lines, hdst, best1, best2, bestangle);
 	sendmessage(midbottom, best1, best2, bestangle);
@@ -76,6 +75,7 @@ void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& l
 	// Do some preprocessing (GRAY -> CANNY EDGE)
 	cv::GaussianBlur(src, dst, cv::Size(gaussian_min * 2 + 1, gaussian_min * 2 + 1), gaussian_dev_min / 5.f);
 	cv::cvtColor(dst, dst, CV_BGR2GRAY);
+	display(dst, "debug");
 	cv::Canny(dst, dst, canny_min, canny_min * canny_ratio, canny_kernel);
 
 	// Perform Hough line detection
@@ -84,7 +84,7 @@ void Analyzer::detect(const cv::Mat& src, cv::Mat& dst, cv::vector<cv::Vec4i>& l
 }
 
 void Analyzer::filter(const cv::Point& origin, const cv::vector<cv::Vec4i>& lines,
-						cv::Mat& dst, cv::Point& best1, cv::Point& best2, double& bestangle) {
+	cv::Mat& dst, cv::Point& best1, cv::Point& best2, double& bestangle) {
 	double bestscore = DBL_MAX;
 	for (size_t i = 0; i < lines.size(); i++) {
 		cv::Point p1(lines[i][0], lines[i][1]);
@@ -110,16 +110,16 @@ void Analyzer::filter(const cv::Point& origin, const cv::vector<cv::Vec4i>& line
 
 void Analyzer::project(const cv::Mat& src, cv::Mat& dst) {
 	cv::Point2f srccoords[4] = {
-			cv::Point2f(1 * src.cols / 4, 0),	// left up
-			cv::Point2f(3 * src.cols / 4, 0),	// right up
-			cv::Point2f(src.cols, src.rows),	// right down
-			cv::Point2f(0, src.rows)		// left down
+		cv::Point2f(1 * src.cols / 4, 0),	// left up
+		cv::Point2f(3 * src.cols / 4, 0),	// right up
+		cv::Point2f(src.cols, src.rows),	// right down
+		cv::Point2f(0, src.rows)		// left down
 	};
 	cv::Point2f dstcoords[4] = {
-			cv::Point2f(0, 0),				// left up
-			cv::Point2f(src.cols, 0),			// right up
-			cv::Point2f(4 * src.cols / 5, src.rows),	// right down
-			cv::Point2f(1 * src.cols / 5, src.rows)		// left down
+		cv::Point2f(0, 0),				// left up
+		cv::Point2f(src.cols, 0),			// right up
+		cv::Point2f(4 * src.cols / 5, src.rows),	// right down
+		cv::Point2f(1 * src.cols / 5, src.rows)		// left down
 	};
 	cv::Mat transform = cv::getPerspectiveTransform(srccoords, dstcoords);
 	cv::warpPerspective(src, dst, transform, src.size());
@@ -128,9 +128,9 @@ void Analyzer::project(const cv::Mat& src, cv::Mat& dst) {
 void Analyzer::rotate(const cv::Mat& src, cv::Mat& dst) {
 	// Rotate and project the image
 	double r[3][3] = {
-			{ 0, -1, src.rows - 1 },
-			{ 1, 0, 0 },
-			{ 0, 0, 1 }
+		{ 0, -1, src.rows - 1 },
+		{ 1, 0, 0 },
+		{ 0, 0, 1 }
 	};
 	cv::Mat transform = cv::Mat(2, 3, CV_64F, r);
 	cv::warpAffine(src, dst, transform, cv::Size(src.rows, src.cols));
@@ -161,7 +161,7 @@ void Analyzer::sendmessage(const cv::Point& origin, const cv::Point& best1, cons
 bool Analyzer::withinbounds(const cv::Point& point)
 {
 	return  point.y - (point.x +  540) * 160 / 63 < -10 &&
-			point.y + (point.x - 1620) * 160 / 63 < -10;
+		point.y + (point.x - 1620) * 160 / 63 < -10;
 }
 
 int main(int argc, char** argv) {

@@ -1,7 +1,7 @@
 #ifndef SENSOR_H_
 #define SENSOR_H_
 
-#define MAX_PULSE 5000 // 100 cm * 58 us ~ 5000 us FIXME
+#define MAX_PULSE 10000 // 100 cm * 58 us ~ 5000 us FIXME
 
 /**
  * This class abstracts and controls a proximity sensor.
